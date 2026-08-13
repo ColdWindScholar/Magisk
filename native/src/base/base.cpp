@@ -1,9 +1,13 @@
 #include <sys/wait.h>
-#include <sys/prctl.h>
+#ifdef __linux__
+# include <sys/prctl.h>
+#endif
 #include <sys/mman.h>
-#include <android/log.h>
-#include <linux/fs.h>
-#include <syscall.h>
+#ifdef __ANDROID__
+# include <android/log.h>
+# include <linux/fs.h>
+# include <syscall.h>
+#endif
 
 #include <base.hpp>
 #include <flags.h>
@@ -14,11 +18,13 @@ using namespace std;
 #define __call_bypassing_fortify(fn) (&fn)
 #endif
 
+#ifdef __ANDROID__
 #ifdef __LP64__
 static_assert(BLKGETSIZE64 == 0x80081272);
 #else
 static_assert(BLKGETSIZE64 == 0x80041272);
 #endif
+#endif /* __ANDROID__ */
 
 rust::Vec<size_t> byte_data::patch(byte_view from, byte_view to) const {
     rust::Vec<size_t> v;
@@ -53,6 +59,7 @@ int fork_dont_care() {
     return 0;
 }
 
+#ifdef __linux__
 int fork_no_orphan() {
     int pid = xfork();
     if (pid)
@@ -62,7 +69,9 @@ int fork_no_orphan() {
         exit(1);
     return 0;
 }
+#endif
 
+#if defined(__linux__) || defined(__CYGWIN__)
 int exec_command(exec_t &exec) {
     auto pipefd = array<int, 2>{-1, -1};
     int outfd = -1;
@@ -117,6 +126,7 @@ int exec_command_sync(exec_t &exec) {
     waitpid(pid, &status, 0);
     return WEXITSTATUS(status);
 }
+#endif /* __linux__ || __CYGWIN__ */
 
 int new_daemon_thread(thread_entry entry, void *arg) {
     pthread_t thread;
@@ -140,7 +150,9 @@ void init_argv0(int argc, char **argv) {
 void set_nice_name(Utf8CStr name) {
     memset(argv0, 0, name_len);
     strscpy(argv0, name.c_str(), name_len);
+#ifdef __linux__
     prctl(PR_SET_NAME, name.c_str());
+#endif
 }
 
 template<typename T, int base>
@@ -175,6 +187,7 @@ uint32_t parse_uint32_hex(string_view s) {
     return parse_num<uint32_t, 16>(s);
 }
 
+#ifdef __ANDROID__
 int switch_mnt_ns(int pid) {
     int ret = -1;
     int fd = syscall(__NR_pidfd_open, pid, 0);
@@ -194,6 +207,7 @@ int switch_mnt_ns(int pid) {
     }
     return ret;
 }
+#endif
 
 string &replace_all(string &str, string_view from, string_view to) {
     size_t pos = 0;
@@ -256,6 +270,7 @@ static int fmt_and_log_with_rs(LogLevel level, const char *fmt, va_list ap) {
     return len;
 }
 
+#ifdef __ANDROID__
 // Used to override external C library logging
 extern "C" int magisk_log_print(int prio, const char *tag, const char *fmt, ...) {
     LogLevel level;
@@ -292,6 +307,7 @@ extern "C" int magisk_log_print(int prio, const char *tag, const char *fmt, ...)
     va_end(argv);
     return ret;
 }
+#endif
 
 #define LOG_BODY(level)   \
     va_list argv;         \

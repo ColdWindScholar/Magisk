@@ -118,6 +118,7 @@ unsafe extern "C" fn xxread(fd: RawFd, buf: *mut u8, bufsz: usize) -> isize {
         .map_or(-1, |_| data.len() as isize)
 }
 
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "cygwin"))]
 pub(crate) fn xpipe2(fds: &mut [i32; 2], flags: i32) -> i32 {
     unsafe {
         libc::pipe2(fds.as_mut_ptr(), flags)
@@ -128,6 +129,7 @@ pub(crate) fn xpipe2(fds: &mut [i32; 2], flags: i32) -> i32 {
 }
 
 #[unsafe(no_mangle)]
+#[cfg(target_os = "android")]
 extern "C" fn xsetns(fd: RawFd, nstype: i32) -> i32 {
     unsafe {
         libc::setns(fd, nstype)
@@ -138,6 +140,7 @@ extern "C" fn xsetns(fd: RawFd, nstype: i32) -> i32 {
 }
 
 #[unsafe(no_mangle)]
+#[cfg(target_os = "android")]
 extern "C" fn xunshare(flags: i32) -> i32 {
     unsafe {
         libc::unshare(flags)
@@ -217,6 +220,7 @@ unsafe extern "C" fn xsymlink(target: *const c_char, linkpath: *const c_char) ->
 }
 
 #[unsafe(no_mangle)]
+#[cfg(target_os = "android")]
 unsafe extern "C" fn xmount(
     src: *const c_char,
     target: *const c_char,
@@ -233,6 +237,7 @@ unsafe extern "C" fn xmount(
 }
 
 #[unsafe(no_mangle)]
+#[cfg(target_os = "android")]
 unsafe extern "C" fn xumount2(target: *const c_char, flags: i32) -> i32 {
     unsafe {
         libc::umount2(target, flags)
@@ -273,6 +278,7 @@ unsafe extern "C" fn xmkdirs(path: *const c_char, mode: mode_t) -> i32 {
 }
 
 #[unsafe(no_mangle)]
+#[cfg(any(target_os = "android", target_os = "linux"))]
 unsafe extern "C" fn xsendfile(
     out_fd: RawFd,
     in_fd: RawFd,

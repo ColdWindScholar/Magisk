@@ -178,8 +178,15 @@ impl FileAttr {
 
     #[inline(always)]
     #[allow(clippy::unnecessary_cast)]
+    #[cfg(target_os = "android")]
     fn is(&self, mode: mode_t) -> bool {
         (self.st.st_mode & libc::S_IFMT as c_uint) as mode_t == mode
+    }
+
+    #[inline(always)]
+    #[cfg(not(target_os = "android"))]
+    fn is(&self, mode: mode_t) -> bool {
+        self.st.st_mode & libc::S_IFMT == mode
     }
 
     pub fn is_dir(&self) -> bool {
@@ -267,6 +274,7 @@ impl Utf8CStr {
     }
 
     // Inspired by https://android.googlesource.com/platform/bionic/+/master/libc/bionic/realpath.cpp
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "cygwin"))]
     pub fn realpath(&self, buf: &mut dyn Utf8CStrBuf) -> OsResult<'_, ()> {
         let fd = self.open(OFlag::O_PATH | OFlag::O_CLOEXEC)?;
         let mut skip_check = false;
@@ -327,6 +335,7 @@ impl Utf8CStr {
         Ok(())
     }
 
+    #[cfg(target_os = "android")]
     pub fn get_secontext(&self, con: &mut dyn Utf8CStrBuf) -> OsResult<'_, ()> {
         con.clear();
         let result = unsafe {
@@ -349,6 +358,7 @@ impl Utf8CStr {
         }
     }
 
+    #[cfg(target_os = "android")]
     pub fn set_secontext<'a>(&'a self, con: &'a Utf8CStr) -> OsResult<'a, ()> {
         unsafe {
             libc::lsetxattr(
@@ -555,6 +565,7 @@ impl FsPathFollow {
         Ok(())
     }
 
+    #[cfg(target_os = "android")]
     pub fn get_secontext(&self, con: &mut dyn Utf8CStrBuf) -> OsResult<'_, ()> {
         con.clear();
         let result = unsafe {
@@ -577,6 +588,7 @@ impl FsPathFollow {
         }
     }
 
+    #[cfg(target_os = "android")]
     pub fn set_secontext<'a>(&'a self, con: &'a Utf8CStr) -> OsResult<'a, ()> {
         unsafe {
             libc::setxattr(
@@ -668,6 +680,7 @@ pub fn fd_set_attr(fd: RawFd, attr: &FileAttr) -> OsResult<'_, ()> {
     Ok(())
 }
 
+#[cfg(target_os = "android")]
 pub fn fd_get_secontext(fd: RawFd, con: &mut dyn Utf8CStrBuf) -> OsResult<'static, ()> {
     con.clear();
     let result = unsafe {
@@ -690,6 +703,7 @@ pub fn fd_get_secontext(fd: RawFd, con: &mut dyn Utf8CStrBuf) -> OsResult<'stati
     }
 }
 
+#[cfg(target_os = "android")]
 pub fn fd_set_secontext(fd: RawFd, con: &Utf8CStr) -> OsResult<'_, ()> {
     unsafe {
         libc::fsetxattr(
@@ -835,6 +849,7 @@ pub struct MountInfo {
 }
 
 #[allow(clippy::useless_conversion)]
+#[cfg(target_os = "android")]
 fn parse_mount_info_line(line: &str) -> Option<MountInfo> {
     let mut iter = line.split_whitespace();
     let id = iter.next()?.parse().ok()?;
@@ -883,6 +898,7 @@ fn parse_mount_info_line(line: &str) -> Option<MountInfo> {
     })
 }
 
+#[cfg(target_os = "android")]
 pub fn parse_mount_info(pid: &str) -> Vec<MountInfo> {
     let mut res = vec![];
     let mut path = format!("/proc/{pid}/mountinfo");

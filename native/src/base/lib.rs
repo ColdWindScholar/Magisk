@@ -24,9 +24,13 @@ mod dir;
 mod files;
 mod logging;
 mod misc;
+#[cfg(target_os = "android")]
 mod mount;
 mod result;
 mod xwrap;
+
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "cygwin"))]
+mod linux_like;
 
 #[cxx::bridge]
 mod ffi {
@@ -64,7 +68,6 @@ mod ffi {
         fn parse_prop_file_rs(name: Utf8CStrRef, f: &FnBoolStrStr);
         #[cxx_name = "file_readline"]
         fn file_readline_for_cxx(fd: i32, f: &FnBoolStr);
-        fn xpipe2(fds: &mut [i32; 2], flags: i32) -> i32;
     }
 
     #[namespace = "rust"]

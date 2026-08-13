@@ -36,14 +36,18 @@ fn write_if_diff<P: AsRef<Path>>(path: P, bytes: &[u8]) -> io::Result<()> {
     f.write_all(bytes)
 }
 
-pub fn gen_cxx_binding(name: &str) {
-    println!("cargo:rerun-if-changed=lib.rs");
+pub fn gen_cxx_binding_from(source: &str, name: &str) {
+    println!("cargo:rerun-if-changed={}", source);
     let mut opt = Opt::default();
     opt.include.push(Include {
         path: "rust/cxx.h".to_string(),
         kind: IncludeKind::Bracketed,
     });
-    let code = cxx_gen::generate_header_and_cc_with_path("lib.rs", &opt);
+    let code = cxx_gen::generate_header_and_cc_with_path(source, &opt);
     write_if_diff(format!("{name}.cpp"), code.implementation.as_slice()).ok_or_exit();
     write_if_diff(format!("{name}.hpp"), code.header.as_slice()).ok_or_exit();
+}
+
+pub fn gen_cxx_binding(name: &str) {
+    gen_cxx_binding_from("lib.rs", name)
 }
