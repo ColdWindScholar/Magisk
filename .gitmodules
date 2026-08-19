@@ -24,4 +24,4 @@
 	url = https://github.com/corrosion-rs/corrosion.git
 [submodule "nix-rs"]
 	path = native/src/external/nix-rs
-	url = https://github.com/dropout-zzz/nix.git
+	url = https://github.com/ColdWindScholar/nix.git
