@@ -19,10 +19,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -35,10 +39,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.topjohnwu.magisk.ui.component.verticalScrollbar
 import com.topjohnwu.magisk.ui.navigation.LocalNavigator
 import com.topjohnwu.magisk.ui.navigation.Route
 import com.topjohnwu.magisk.core.R as CoreR
@@ -77,20 +85,35 @@ fun SuperuserScreen(viewModel: SuperuserViewModel) {
                     .padding(padding),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = stringResource(CoreR.string.superuser_policy_none),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(CoreR.drawable.ic_superuser),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Text(
+                        text = stringResource(CoreR.string.superuser_policy_none),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             return@Scaffold
         }
 
+        val listState = rememberLazyListState()
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(padding)
+                .verticalScrollbar(listState, contentPadding = PaddingValues(bottom = 88.dp))
                 .padding(horizontal = 12.dp),
             contentPadding = PaddingValues(bottom = 88.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -117,7 +140,10 @@ private fun PolicyCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (item.isEnabled) 1f else 0.5f)
+            .clip(RoundedCornerShape(20.dp))
+            .alpha(if (item.isEnabled) 1f else 0.5f),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
         Row(
             modifier = Modifier
@@ -142,7 +168,7 @@ private fun PolicyCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = item.title,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f, fill = false),
                         )
                         if (item.isSharedUid) {
@@ -150,6 +176,7 @@ private fun PolicyCard(
                             SharedUidBadge()
                         }
                     }
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = item.packageName,
                         style = MaterialTheme.typography.bodyMedium,
@@ -185,8 +212,14 @@ private fun PolicyCard(
 internal fun SharedUidBadge(modifier: Modifier = Modifier) {
     Badge(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     ) {
-        Text(stringResource(CoreR.string.shared_uid))
+        Text(
+            text = stringResource(CoreR.string.shared_uid),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
     }
 }

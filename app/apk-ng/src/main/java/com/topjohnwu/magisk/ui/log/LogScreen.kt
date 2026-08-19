@@ -1,7 +1,6 @@
 package com.topjohnwu.magisk.ui.log
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,8 +45,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -63,6 +61,7 @@ import com.topjohnwu.magisk.core.ktx.timeDateFormat
 import com.topjohnwu.magisk.core.ktx.toTime
 import com.topjohnwu.magisk.core.model.su.SuLog
 import com.topjohnwu.magisk.ui.component.rememberExternalStoragePermissionLauncher
+import com.topjohnwu.magisk.ui.component.verticalScrollbar
 import com.topjohnwu.magisk.core.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -170,10 +169,13 @@ private fun SuLogTab(logs: List<SuLog>, nestedScrollConnection: NestedScrollConn
                 )
             }
         } else {
+            val listState = rememberLazyListState()
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .nestedScroll(nestedScrollConnection)
+                    .verticalScrollbar(listState, contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp))
                     .padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -219,8 +221,12 @@ private fun SuLogCard(log: SuLog) {
         }
     }
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -230,14 +236,15 @@ private fun SuLogCard(log: SuLog) {
                     contentDescription = log.appName,
                     modifier = Modifier.size(36.dp)
                 )
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = log.appName,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = uidPidText,
                         style = MaterialTheme.typography.bodyMedium,
@@ -261,7 +268,7 @@ private fun SuLogCard(log: SuLog) {
             }
 
             if (details.isNotEmpty()) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     text = details,
                     fontFamily = FontFamily.Monospace,
@@ -276,11 +283,20 @@ private fun SuLogCard(log: SuLog) {
 
 @Composable
 private fun SuActionBadge(allowed: Boolean) {
-    val bg = if (allowed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+    val bg = if (allowed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+    val fg = if (allowed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
     val text = if (allowed) stringResource(CoreR.string.granted) else stringResource(CoreR.string.denied)
     Badge(
         containerColor = bg,
-    ) { Text(text = text) }
+        contentColor = fg,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
+    }
 }
 
 @Composable
@@ -311,9 +327,10 @@ private fun MagiskLogTab(
                 modifier = Modifier
                     .weight(1f)
                     .nestedScroll(nestedScrollConnection)
+                    .verticalScrollbar(listState, contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp))
                     .padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(entries.size, key = { it }) { index ->
                     MagiskLogCard(entries[index])
@@ -330,9 +347,11 @@ private fun MagiskLogCard(entry: MagiskLogEntry) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { expanded = !expanded }
+            .clickable { expanded = !expanded },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             if (entry.isParsed) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -341,14 +360,14 @@ private fun MagiskLogCard(entry: MagiskLogEntry) {
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         LogLevelBadge(entry.level)
                         Text(
                             text = entry.tag,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Normal,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -362,7 +381,7 @@ private fun MagiskLogCard(entry: MagiskLogEntry) {
                         maxLines = 1,
                     )
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(6.dp))
             }
 
             Text(
@@ -380,28 +399,24 @@ private fun MagiskLogCard(entry: MagiskLogEntry) {
 
 @Composable
 private fun LogLevelBadge(level: Char) {
+    val colorScheme = MaterialTheme.colorScheme
     val (bg, fg) = when (level) {
-        'V' -> Color(0xFF9E9E9E) to Color.White
-        'D' -> Color(0xFF2196F3) to Color.White
-        'I' -> Color(0xFF4CAF50) to Color.White
-        'W' -> Color(0xFFFFC107) to Color.Black
-        'E' -> Color(0xFFF44336) to Color.White
-        'F' -> Color(0xFF9C27B0) to Color.White
-        else -> Color(0xFF757575) to Color.White
+        'V' -> colorScheme.surfaceVariant to colorScheme.onSurfaceVariant
+        'D' -> colorScheme.secondaryContainer to colorScheme.onSecondaryContainer
+        'I' -> colorScheme.primaryContainer to colorScheme.onPrimaryContainer
+        'W' -> colorScheme.tertiaryContainer to colorScheme.onTertiaryContainer
+        'E', 'F' -> colorScheme.errorContainer to colorScheme.onErrorContainer
+        else -> colorScheme.surfaceVariant to colorScheme.onSurfaceVariant
     }
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(bg)
-            .padding(horizontal = 5.dp, vertical = 1.dp),
-        contentAlignment = Alignment.Center
+    Badge(
+        containerColor = bg,
+        contentColor = fg,
     ) {
         Text(
             text = level.toString(),
-            fontSize = 10.sp,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace,
-            color = fg,
+            modifier = Modifier.padding(horizontal = 2.dp)
         )
     }
 }

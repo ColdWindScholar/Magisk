@@ -2,16 +2,20 @@ package com.topjohnwu.magisk.ui.settings
 
 import android.os.Build
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,12 +48,14 @@ import com.topjohnwu.magisk.ui.component.SettingsArrow
 import com.topjohnwu.magisk.ui.component.SettingsDropdown
 import com.topjohnwu.magisk.ui.component.SettingsSwitch
 import com.topjohnwu.magisk.ui.component.SmallTitle
+import com.topjohnwu.magisk.ui.component.verticalScrollbar
 import com.topjohnwu.magisk.core.R as CoreR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollState = rememberScrollState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -62,8 +68,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
                 .padding(padding)
+                .verticalScrollbar(scrollState, contentPadding = PaddingValues(bottom = 88.dp))
+                .verticalScroll(scrollState)
                 .padding(horizontal = 12.dp)
                 .padding(bottom = 88.dp)
         ) {
@@ -89,7 +96,11 @@ private fun CustomizationSection(viewModel: SettingsViewModel) {
     val context = LocalContext.current
 
     SmallTitle(text = stringResource(CoreR.string.settings_customization))
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         if (LocaleSetting.useLocaleManager) {
             val locale = LocaleSetting.instance.appLocale
             val summary = locale?.getDisplayName(locale) ?: stringResource(CoreR.string.system_default)
@@ -152,7 +163,11 @@ private fun AppSettingsSection() {
     val resources = LocalResources.current
 
     SmallTitle(text = stringResource(CoreR.string.home_app_title))
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         // Update Channel
         val updateChannelEntries = remember {
             resources.getStringArray(CoreR.array.update_channel).toList()
@@ -246,7 +261,11 @@ private fun AppSettingsSection() {
 @Composable
 private fun MagiskSection(viewModel: SettingsViewModel) {
     SmallTitle(text = stringResource(CoreR.string.magisk))
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         // Systemless Hosts
         SettingsArrow(
             title = stringResource(CoreR.string.settings_hosts_title),
@@ -298,7 +317,11 @@ private fun SuperuserSection(viewModel: SettingsViewModel) {
     val resources = LocalResources.current
 
     SmallTitle(text = stringResource(CoreR.string.superuser))
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
         // Tapjack (SDK < S)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             var tapjack by remember { mutableStateOf(Config.suTapjack) }
